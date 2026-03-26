@@ -36,6 +36,16 @@ idtinit(void)
 void
 trap(struct trapframe *tf)
 {
+  if(tf->trapno == T_PGFLT){
+    uint virt_addx = rcr2();
+    if(myproc() && (tf->cs & 3) == DPL_USER){
+     if(virt_addx < PGSIZE)
+        cprintf("PID: %d (%s): NULL dereference, virtual addx=0x%x eip=0x%x\n", myproc()->pid, myproc()->name, virt_addx, tf->eip);
+      else
+       cprintf("PID: %d (%s): page fault, virtual addx=0x%x eip=0x%x\n", myproc()->pid, myproc()->name, virt_addx, tf->eip);
+      myproc()->killed = 1;
+    }
+  }
   if(tf->trapno == T_SYSCALL){
     if(myproc()->killed)
       exit();
